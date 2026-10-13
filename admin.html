@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="dashboard">
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Admin Panel</h2>
+            <small>Attendance System</small>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="showSection('dashboard',this)"><i class="nav-icon fa-solid fa-chart-pie"></i> Dashboard</div>
+            <div class="nav-item" onclick="showSection('students',this)"><i class="nav-icon fa-solid fa-user-graduate"></i> Students</div>
+            <div class="nav-item" onclick="showSection('teachers',this)"><i class="nav-icon fa-solid fa-chalkboard-teacher"></i> Teachers</div>
+            <div class="nav-item" onclick="showSection('classes',this)"><i class="nav-icon fa-solid fa-layer-group"></i> Classes</div>
+            <div class="nav-item" onclick="showSection('qrcodes',this)"><i class="nav-icon fa-solid fa-qrcode"></i> QR Codes</div>
+            <div class="nav-divider"></div>
+            <div class="nav-item" onclick="showSection('dayReport',this)"><i class="nav-icon fa-solid fa-calendar-day"></i> Day Report</div>
+            <div class="nav-item" onclick="showSection('monthlyReport',this)"><i class="nav-icon fa-solid fa-calendar-alt"></i> Monthly Report</div>
+            <div class="nav-divider"></div>
+            <div class="nav-item" onclick="logout()"><i class="nav-icon fa-solid fa-arrow-right-from-bracket"></i> Logout</div>
+        </nav>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="main-content">
+        <div class="top-header">
+            <div style="display:flex;align-items:center;gap:16px">
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                <div class="header-title">
+                    <h2 id="pageTitle">Overview</h2>
+                    <p id="dateDisplay"></p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="user-info">
+                    <div class="user-avatar" id="adminAvatar"><i class="fa-solid fa-shield"></i></div>
+                    <span id="adminName" style="font-weight:600;font-size:14px">Administrator</span>
+                </div>
+            </div>
+        </div>
+        <div class="page-content">
+            <!-- DASHBOARD -->
+            <div class="section-page active" id="section-dashboard">
+                <div class="stats-grid" id="dashboardStats"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Today's Overview</h3>
+                        <button class="btn btn-outline btn-sm" onclick="loadDashboard()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <div class="card-body" id="todayOverview"><div class="empty-state"><i class="empty-icon fa-solid fa-circle-notch fa-spin"></i><h3>Loading...</h3></div></div>
+                </div>
+            </div>
+            <!-- STUDENTS -->
+            <div class="section-page" id="section-students">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Students Directory</h3>
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="fa-solid fa-plus"></i> Add Student</button>
+                            <button class="btn btn-outline btn-sm" onclick="showBulkUploadModal()"><i class="fa-solid fa-file-arrow-up"></i> Bulk</button>
+                            <button class="btn btn-ghost btn-sm" onclick="exportStudents()"><i class="fa-solid fa-download"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-bar">
+                            <div class="form-group">
+                                <label>Class</label>
+                                <select class="form-control" id="filterStudentClass" onchange="loadStudents()"><option value="">All Classes</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Section</label>
+                                <select class="form-control" id="filterStudentSection" onchange="loadStudents()"><option value="">All Sections</option></select>
+                            </div>
+                            <div class="form-group" style="flex:2;min-width:200px">
+                                <label>Search</label>
+                                <input type="text" class="form-control" id="searchStudent" placeholder="Search by name or ID..." oninput="filterStudentTable()">
+                            </div>
+                        </div>
+                        <div class="table-responsive" id="studentsTableContainer"><div class="empty-state"><i class="empty-icon fa-solid fa-user-xmark"></i><h3>No students found</h3></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- TEACHERS -->
+            <div class="section-page" id="section-teachers">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Staff Directory</h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddTeacherModal()"><i class="fa-solid fa-plus"></i> Add Teacher</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="teachersTableContainer"><div class="empty-state"><i class="empty-icon fa-solid fa-users-slash"></i><h3>No teachers found</h3></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- CLASSES -->
+            <div class="section-page" id="section-classes">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Class Management</h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddClassModal()"><i class="fa-solid fa-plus"></i> Add Class</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" id="classesTableContainer"><div class="empty-state"><i class="empty-icon fa-solid fa-shapes"></i><h3>No classes found</h3></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- QR CODES -->
+            <div class="section-page" id="section-qrcodes">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Generate QR Codes</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-bar">
+                            <div class="form-group">
+                                <label>Class</label>
+                                <select class="form-control" id="qrClass" onchange="loadStudentsForQR()"><option value="">Select Class</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Section</label>
+                                <select class="form-control" id="qrSection" onchange="loadStudentsForQR()"><option value="">Select Section</option></select>
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-primary" onclick="loadStudentsForQR()" style="margin-top:28px; height: 44px;"><i class="fa-solid fa-bolt"></i> Generate</button>
+                            </div>
+                        </div>
+                        <div id="qrCodesContainer"><div class="empty-state"><i class="empty-icon fa-solid fa-qrcode"></i><h3>Select class and section to generate codes</h3></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- DAY REPORT -->
+            <div class="section-page" id="section-dayReport">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Daily Attendance Report</h3>
+                        <div class="btn-group no-print">
+                            <button class="btn btn-outline btn-sm" onclick="printElement('dayReportContent')"><i class="fa-solid fa-print"></i> Print</button>
+                            <button class="btn btn-ghost btn-sm" onclick="exportDayReport()"><i class="fa-solid fa-download"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-bar no-print">
+                            <div class="form-group"><label>Date</label><input type="date" class="form-control" id="reportDate"></div>
+                            <div class="form-group"><label>Class</label><select class="form-control" id="reportClass"><option value="">All</option></select></div>
+                            <div class="form-group"><label>Section</label><select class="form-control" id="reportSection"><option value="">All</option></select></div>
+                            <button class="btn btn-primary" onclick="loadDayReport()" style="margin-top:28px;"><i class="fa-solid fa-eye"></i> View</button>
+                        </div>
+                        <div id="dayReportContent"><div class="empty-state"><i class="empty-icon fa-solid fa-calendar-day"></i><h3>Select date to view report</h3></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- MONTHLY REPORT -->
+            <div class="section-page" id="section-monthlyReport">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Monthly Attendance Report</h3>
+                        <div class="btn-group no-print">
+                            <button class="btn btn-outline btn-sm" onclick="printElement('monthlyReportContent')"><i class="fa-solid fa-print"></i> Print</button>
+                            <button class="btn btn-ghost btn-sm" onclick="exportMonthlyReport()"><i class="fa-solid fa-download"></i> Export</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-bar no-print">
+                            <div class="form-group">
+                                <label>Month</label>
+                                <select class="form-control" id="reportMonth"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>
+                            </div>
+                            <div class="form-group"><label>Year</label><select class="form-control" id="reportYear"></select></div>
+                            <div class="form-group"><label>Class</label><select class="form-control" id="monthlyClass"><option value="">All</option></select></div>
+                            <div class="form-group"><label>Section</label><select class="form-control" id="monthlySection"><option value="">All</option></select></div>
+                            <button class="btn btn-primary" onclick="loadMonthlyReport()" style="margin-top:28px;"><i class="fa-solid fa-eye"></i> View</button>
+                        </div>
+                        <div id="monthlyReportContent"><div class="empty-state"><i class="empty-icon fa-solid fa-calendar-alt"></i><h3>Select month and year</h3></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
